@@ -1,10 +1,10 @@
 {
   "name": "volt",
   "version": "0.1.0",
-  "description": "Volt Ontology and Linked-data Technology",
+  "description": "VOLT Ontology and Linked-data Technology",
   "author": "Blake Regalia <blake.regalia@gmail.com> (http://blake-regalia.com)",
   "license": "ISC",
-  "repository": "blake-regalia/volt",
+  "repository": "blake-regalia/volt.js",
   "files": [
     "dist"
   ],
