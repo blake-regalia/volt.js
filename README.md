@@ -19,13 +19,18 @@ $ npm install volt
 
 
 ## Usage
-
 ```js
 const volt = require('volt');
+const postgis = require('volt-plugin-postgis');
 
 // create volt instance
 let volt_query = volt({
-    plugins: 
+    plugins: {
+        // load the postgis plugin, passing it a postgres connection string to a db
+		[postgis.namespace]: postgis.create({
+			connection: 'postgres://blake@localhost/volt',
+		}),
+    },
 });
 
 // issue sparql query
