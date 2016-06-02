@@ -24,8 +24,8 @@
     "npm": ">=1.1.65"
   },
   "dependencies": {
-    "body-parser": "^1.14.2",
-    "classer": "^0.3.0",
+    "body-parser": "^1.15.1",
+    "classer": "^0.3.2",
     "cli-color": "^1.1.0",
     "clone": "^1.0.2",
     "extend": "^3.0.0",
@@ -34,15 +34,15 @@
     "n3": "^0.4.5",
     "node-uuid": "^1.4.7",
     "qs": "^6.2.0",
-    "rapunzel": "^0.1.10",
-    "spaz": "^0.1.32",
+    "rapunzel": "^0.1.12",
+    "spaz": "^0.2.1",
     "turtle-validator": "^1.0.1"
   },
   "devDependencies": {
     "amd-loader": "0.0.5",
     "babel-cli": "^6.4.5",
     "babel-core": "^6.8.0",
-    "babel-eslint": "^4.1.8",
+    "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.1",
     "babel-plugin-transform-runtime": "^6.4.3",
     "babel-preset-es2015": "^6.3.13",
@@ -56,7 +56,7 @@
     "gulp-concat": "^2.6.0",
     "gulp-coveralls": "^0.1.4",
     "gulp-debug": "^2.1.2",
-    "gulp-eslint": "^1.1.1",
+    "gulp-eslint": "^2.0.0",
     "gulp-exclude-gitignore": "^1.0.0",
     "gulp-istanbul": "^0.10.3",
     "gulp-jison": "^1.2.0",
@@ -78,7 +78,7 @@
     "plist": "^1.2.0",
     "progress": "^1.1.8",
     "requestretry": "^1.6.0",
-    "should": "^8.2.1",
+    "should": "^9.0.0",
     "through2": "^2.0.1"
   }
 }
