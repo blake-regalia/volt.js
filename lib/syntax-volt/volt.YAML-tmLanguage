@@ -1,0 +1,691 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+---
+name: Volt
+scopeName: source.volt
+fileTypes: ["volt"]
+uuid: 458bd326-4790-4e74-a88e-2d13ccaf8722
+
+patterns:
+
+- include: '#comment'
+
+- include: '#constants'
+- include: '#prefixes'
+
+- include: '#injector'
+- include: '#function'
+- include: '#relation'
+- include: '#method'
+
+
+repository:
+
+  comment:
+    patterns:
+    - begin: (\/\*)
+      end: (\*\/)
+      name: comment.block.volt
+    - begin: (#)
+      end: (\n|$)
+      name: comment.line.volt
+
+
+
+##
+# atoms:
+##
+
+  string:
+    patterns:
+    - begin: (')
+      end: (')
+      name: string.quoted.single.volt
+      patterns:
+      - name: invalid.string.newline
+        match: \n
+      - name: constant.character.escape.volt
+        match: \\.
+    - begin: (")
+      end: (")
+      name: string.quoted.double.volt
+      patterns:
+      - name: invalid.string.newline
+        match: \n
+      - name: constant.character.escape.volt
+        match: \\.
+
+  interpolated-string:
+    patterns:
+    - begin: (`)
+      end: (`)
+      # name: string.interpolated.volt
+      patterns:
+      - begin: (\$\{)
+        beginCaptures:
+          '1': {name: markup.raw.volt}
+        end: (\})
+        endCaptures:
+          '1': {name: markup.raw.volt}
+        patterns:
+        - include: '#expression'
+      - match: .
+        name: string.interpolated.volt
+
+  constant:
+    patterns:
+    - match: (\$\w+)
+      name: constant.language.volt
+
+  variable:
+    patterns:
+    - match: (\?\w+)(:\w+)?
+      captures:
+        '1': {name: variable.parameter.volt}
+        '2': {name: string.unquoted.volt}
+
+  regex:
+    patterns:
+    - match: (~[/]([^/\\]|\\.)+[/])[a-z]*
+      name: string.regexp.volt
+
+  argument-list:
+    patterns:
+    - begin: (\()
+      end: (\))
+      patterns:
+      - match: (single)
+        name: storage.modifier.volt
+      - match: (\?\w+)
+        name: variable.parameter.volt
+
+  datatype:
+    patterns:
+    - match: (\^\^\w*:\w*)
+      name: storage.type.volt
+
+  rdf-type:
+    patterns:
+    - match: (a)\s+(\w*:\w*)
+      captures:
+        '1': {name: keyword.control.volt}
+        '2': {name: string.unquoted.volt}
+
+  expression:
+    patterns:
+    - include: '#variable'
+    - include: '#regex'
+    - include: '#string'
+    - include: '#interpolated-string'
+    - match: (subject|predicate|object)
+      name: constant.language.volt
+    - match: (match(es)?|has)
+      name: keyword.operator.volt
+    - match: (null)
+      name: storage.type.volt
+    - match: \b(no|yes)\s+(\?\w+)
+      captures:
+        '1': {name: constant.character.eval.volt}
+        '2': {name: entity.name.function.volt}
+    - match: (\w*:\w*)(?=\()
+      captures:
+        '1': {name: entity.name.function.volt}
+    - match: (\w*:\w*)
+      name: string.unquoted.predicate.volt
+    - match: ([<>!=]=)
+      name: constant.character.eval-math-operator.volt
+    - match: ([-+*/><]|&&|\|\|)
+      name: constant.character.eval-math-operator.volt
+    - match: ([+-]?((\d+(\.\d*)?)|(\.\d+)))
+      name: constant.numeric.volt
+    - match: (true|false|tau|pi)
+      name: constant.language.volt
+    - match: ([$]\w+)
+      name: constant.language.volt
+    - match: (sqrt|abs|uri|iri|concat|str(after|before|len|dt|lang|uuid|starts|ends)?)
+      name: support.function.volt
+    - match: (sum)
+      name: support.function.volt
+    - match: (,)
+      name: punctuation.separator.sequence.volt
+    - begin: (\()
+      end: (\))
+      patterns:
+      - include: '#expression'
+    - match: ([^\s]+)
+      name: invalid.illegal.volt
+
+
+##
+# elements:
+##
+
+  prefix-definition:
+    patterns:
+    - match: (\w*:\w*)
+      name: constant.language.prefixed-name.volt
+    - begin: (<)
+      end: (>)\s*(?=;)
+      name: string.unquoted.uri.volt
+
+
+  # ?variable:property(filter)
+  variable-filter:
+    patterns:
+    - include: '#variable'
+    - begin: (\() #filter
+      end: (\))
+      patterns:
+      - match: (or)
+        name: keyword.operator.volt
+      - include: '#datatype'
+      - include: '#rdf-type'
+      - include: '#constant'
+      - include: '#regex'
+      - match: (\w*:\w*)
+        name: entity.name.function.volt
+      - match: (iri|numeric|literal|string|blanknode|list)
+        name: storage.type.volt
+    - begin: (:\[) # destruct
+      end: (\])
+      patterns:
+      - match: (\w*)
+        name: string.unquoted.volt
+      - match: (,|\s+)
+        name: markup.raw.volt
+      - match: .
+        name: invalid.illegal.volt
+
+  # = #expression
+  gets-expression:
+    patterns:
+    - begin: ([%*/+-]?=)
+      beginCaptures:
+        '1': {name: keyword.operator.assignment.volt}
+      end: (;)
+      patterns:
+        - include: '#expression'
+
+  implicit-property-expression:
+    patterns:
+    - match: (\w*:\w*)
+      name: string.unquoted.predicate.volt
+    - match: (\s)(u|U)\s  # union operator
+      name: constant.character.volt
+    - begin: (?=\&\w+\()
+      end: (\))
+      patterns:
+      - match: (&\w+)
+        name: entity.name.function.volt
+      - match: (\w*:\w*)
+        name: string.unquoted.predicate.volt
+
+  implicit-property-extraction:
+    patterns:
+    - begin: (=)
+      end: (?=;)
+      patterns:
+      - include: '#implicit-property-expression'
+
+  pattern:
+    patterns:
+    - include: '#sparql-pattern'
+    - include: '#contextual-pattern'
+
+  sparql-pattern:
+    patterns:
+    - begin: (\{)
+      end: (\})([^\n]*) # (?:\s+(order\s+by\s+(?:(?:asc|desc)\(\)))?))
+      endCaptures:
+        '1': {name: string.unquoted.sparql.volt}
+        '2': {name: string.unquoted.sparql.volt}
+      name: string.unquoted.sparql.volt
+      patterns:
+      - include: '#graph-pattern'
+
+  contextual-pattern:
+    patterns:
+    - begin: (\[)
+      end: (\])
+      name: string.unquoted.context-block.volt
+      patterns:
+      - include: '#graph-pattern'
+
+  graph-pattern:
+    patterns:
+      - match: ((this|subject|property|object)|\W[@$]\w+)
+        name: constant.language.volt
+      - begin: (\[)
+        end: (\])
+        patterns:
+        - include: '#graph-pattern'
+      - begin: (\{)
+        end: (\})
+        patterns:
+        - include: '#graph-pattern'
+      - include: '#variable'
+      - match: (a)
+        name: string.interpolated.volt
+      - match: (\w*:\w*)
+        name: string.interpolated.volt
+      - match: (filter|not|exists|graph|select|where|limit|sum|group|order|by|group_concat|offset|if|coalesce|in|is(iri|blank|literal|numeric)|str|lang|datatype|iri|uri|str|bnode|strdt|strlang|uuid|struuid|strlen|regex|replace|substr|ucase|lcase|strstarts|strends|contains|strbefore|strafter|encode_for_uri|concat|langmatches|abs|round|ceil|floor|rand|now|year|month|day|hours|minutes|seconds|timezone|tz|md5|sha1|sha256|sha384|sha512|values|distinct|reduced|having|count|avg|min|max|sample)
+        name: keyword.operator.volt
+
+
+##
+# prologue:
+##
+
+  constants:
+    patterns:
+    - begin: \b(constants)\s*\{
+      beginCaptures:
+        '1': {name: support.constant.other.constants.volt}
+      end: (\})
+      patterns:
+      - match: ([$](\w+))
+        name: constant.numeric.volt
+      - include: '#gets-expression'
+
+  prefixes:
+    patterns:
+    - begin: (prefixes)\s*\{
+      beginCaptures:
+        '1': {name: support.constant.other.prefixes.volt}
+      end: (\})
+      patterns:
+      - include: '#prefix-definition'
+    - begin: (prefix)\s*(?=\w*:)
+      beginCaptures:
+        '1': {name: support.constant.other.prefix.volt}
+      end: (\n)
+      patterns:
+      - include: '#prefix-definition'
+
+
+
+##
+# main signatures:
+##  
+
+  injector:
+    patterns:
+    - begin: (injector)\s+(\&\w+)\s*(?=\([^\)]*\)\s*\{)
+      beginCaptures:
+        '1': {name: storage.type.volt}
+        '2': {name: entity.name.function.volt}
+      end: (\})
+      patterns:
+      - include: '#argument-list'
+      - include: '#block-static-start'
+
+  function:
+    patterns:
+    - begin: (function)\s+(\w*:\w*)\s*(?=\([^\)]*\)\s*\{)
+      beginCaptures:
+        '1': {name: storage.type.volt}
+        '2': {name: entity.name.function.volt}
+      end: (\})
+      patterns:
+      - include: '#argument-list'
+      - include: '#block-start'
+
+  relation:
+    patterns:
+    - begin: (?:(abstract)\s+)?(relation)\s+(\w*:\w*)(?:\s+(extends)\s+(\w*:\w*))?\s*\{
+      beginCaptures:
+        '1': {name: storage.modifier.volt}
+        '2': {name: storage.type.volt}
+        '3': {name: entity.name.function.volt}
+        '4': {name: support.constant.extends.volt}
+        '5': {name: entity.name.class.super-class.volt}
+      end: (\})
+      patterns:
+      - include: '#body'
+
+  method:
+    patterns:
+    - begin: (?:(method)\s+(\w*:\w*))\s*\{
+      beginCaptures:
+        '1': {name: storage.type.volt}
+        '2': {name: entity.name.function.volt}
+      end: (\})
+      patterns:
+      - include: '#body-method'
+
+##
+# main containers:
+##
+
+  body:
+    patterns:
+    - include: '#comment'
+    - include: '#abstract-destruct'
+    - include: '#assignment'
+    - include: '#if-else'
+    - include: '#select'
+    - include: '#implicit-select'
+    - include: '#return'
+    # - include: '#super'
+    # - include: '#field'
+    # - include: '#select'
+    # - include: '#group-destructure'
+    # - include: '#code'
+    # - include: '#target'
+
+  body-method:
+    patterns:
+    - include: '#input'
+    - include: '#body'
+
+  body-static:
+    patterns:
+    - include: '#comment'
+    - begin: (return)
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+      end: (;)
+      patterns:
+      - include: '#interpolated-string'
+
+
+##
+# body containers:
+##
+
+  block:
+    patterns:
+    - begin: (\{)
+      beginCaptures:
+        '1': {name: punctuation.other.volt}
+      end: (\})
+      endCaptures:
+        '1': {name: punctuation.other.volt}
+      patterns:
+      - include: '#body'
+
+  block-start:
+    patterns:
+    - begin: (\{)
+      beginCaptures:
+        '1': {name: punctuation.other.volt}
+      end: (?=\})
+      endCaptures:
+        '1': {name: punctuation.other.volt}
+      patterns:
+      - include: '#body'
+
+  block-static-start:
+    patterns:
+    - begin: (\{)
+      beginCaptures:
+        '1': {name: punctuation.other.volt}
+      end: (?=\})
+      endCaptures:
+        '1': {name: punctuation.other.volt}
+      patterns:
+      - include: '#body-static'
+
+
+
+##
+# body block openers:
+##
+
+  if-else:
+    patterns:
+    - begin: (if|else(?:\s+if)?)
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+      end: (?=\{)
+      patterns:
+      - include: '#expression'
+    - include: '#block'
+
+
+##
+# statements:
+##
+
+  abstract-destruct:
+    patterns:
+    - begin: (abstract)\s+(\?\w*)
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+        '2': {name: variable.parameter.volt}
+      end: (?=.)
+      patterns:
+      - include: '#block'
+
+  assignment:
+    patterns:
+    - include: '#variable-filter'
+    - include: '#gets-expression'
+
+  return:
+    patterns:
+    - begin: (yield|output|return)\s+
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+      end: (;)
+      patterns:
+      - begin: (?=\{)
+        patterns:
+        - include: '#sparql-pattern'
+        end: (?=.)
+      - begin: (?=[^\{])
+        patterns:
+        - include: '#expression'
+        end: (?=;)
+      # - include: '#sparql-pattern'
+      # - include: '#expression'
+
+  implicit-select:
+    patterns:
+    - begin: (subject|object)\s+(?=\?)
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+      end: (?=\{|\[|\;)
+      patterns:
+      - include: '#variable-filter'
+      - include: '#implicit-property-extraction'
+    - include: '#graph-pattern'
+
+  select:
+    patterns:
+    - begin: (select)\s+
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+      end: (\n)
+      patterns:
+      - begin: (?=\?)
+        end: (?=\{)
+        patterns:
+        - include: '#select-variables'
+      - include: '#sparql-pattern'
+
+  select-variables:
+    patterns:
+    - include: '#variable'
+    - match: (=)
+      name: keyword.operator.volt
+    - include: '#expression'
+
+  input:
+    patterns:
+    - begin: (input)\s+(?=\?)
+      beginCaptures:
+        '1': {name: keyword.operator.volt}
+      end: (;)
+      patterns:
+      - include: '#variable-filter'
+      - match: (decluster)\s+(into)\s+
+        name: keyword.operator.volt
+
+  # super:
+  #   patterns:
+  #   - begin: (super)\s+(\?\w+)\s+\{
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.volt}
+  #       '2': {name: variable.parameter.volt}
+  #     # patterns:
+  #     # - begin: (\?\w+)\s+\{
+  #     #   beginCaptures:
+  #     #       '1': {name: variable.parameter.volt}
+  #     patterns:
+  #     - include: '#target'
+  #     end: (\})
+
+  # body-argument:
+  #   patterns:
+  #   - begin: \b((?:optional\s+)?argument)
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.volt}
+  #     end: (\n)
+  #     patterns:
+  #     - include: '#field-variable'
+  #     - include: '#field-datatype'
+
+  # group-destructure:
+  #   patterns:
+  #   - begin: \b(abstract)\s+(\?\w+)\s*(\{)
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.volt}
+  #       '2': {name: variable.parameter.volt}
+  #     patterns:
+  #     - include: '#comment'
+  #     - include: '#field-body'
+  #     end: (\})
+
+  # field:
+  #   patterns:
+  #   - begin: \b(input|subject|predicate|object)\s+(?=\?)
+  #     beginCaptures:
+  #        '1': {name: keyword.operator.volt}
+  #     end: (?=\n|\{|\[)
+  #     patterns:
+  #     - include: '#field-body'
+  #   - include: '#pattern'
+
+  # code:
+  #   patterns:
+  #   - begin: \b(using|evaluate)\s+(?=\?)
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.stage.volt}
+  #     end: (?=\n|,)
+  #     patterns:
+  #     - include: '#target'
+  #   - include: '#code-block'
+
+  # code-block:
+  #   patterns:
+  #   - begin: \b(using|evaluate)\s(\{)
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.stage.volt}
+  #     end: (\})
+  #     patterns:
+  #     - include: '#target'
+
+
+  # output:
+  #   patterns:
+  #   - begin: \b(output)\s*(?=\{|\[)
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.stage.volt}
+  #     end: (?=\}|\])
+  #     patterns:
+  #     - include: '#pattern'
+
+
+
+## field
+
+  # field-body:
+  #   patterns:
+  #   - include: '#field-variable'
+  #   - include: '#field-datatype'
+  #   - include: '#field-assignment'
+
+  # field-variable:
+  #   patterns:
+  #   - match: (\?\w+)(:\w+)?
+  #     captures: 
+  #       '1': {name: variable.parameter.lhs-variable.volt}
+  #       '2': {name: string.unquoted.volt}
+  #   - begin: (\()
+  #     end: (\))
+  #     patterns:
+  #     - match: (\^\^\w*:\w*)
+  #       name: storage.type.volt
+  #     - match: (a)\s+(\w*:\w*)
+  #       captures:
+  #         '1': {name: keyword.control.volt}
+  #         '2': {name: string.unquoted.volt}
+  #     - match: (\$\w+)
+  #       name: constant.language.volt
+  #     - match: (\w*:\w*)
+  #       name: entity.name.function.volt
+  #     - include: '#regex'
+
+  # field-datatype:
+  #   patterns:
+  #   - begin: \(
+  #     end: \)
+  #     patterns:
+  #       - match: (\w*:\w*)
+  #         name: support.type.datatype.volt
+  #       - match: (iri|numeric|text)
+  #         name: constant.language.volt
+
+  # field-assignment:
+  #   patterns:
+  #   - begin: (=)
+  #     beginCaptures:
+  #       '1': {name: keyword.operator.assignment.volt}
+  #     end: (;)
+  #     patterns:
+  #       - include: '#expression'
+  #   - include: '#pattern'
+
+  # pattern:
+  #   patterns:
+  #   - include: '#sparql-pattern'
+  #   - include: '#context-pattern'
+
+  # sparql-pattern:
+  #   patterns:
+  #   - begin: (\{)
+  #     end: (\})([^\n]*) # (?:\s+(order\s+by\s+(?:(?:asc|desc)\(\)))?))
+  #     endCaptures:
+  #       '1': {name: string.unquoted.sparql.volt}
+  #       '2': {name: string.unquoted.sparql.volt}
+  #     name: string.unquoted.sparql.volt
+  #     patterns:
+  #     - include: '#graph'
+
+  # context-pattern:
+  #   patterns:
+  #   - begin: (\[)
+  #     end: (\])
+  #     name: string.unquoted.context-block.volt
+  #     patterns:
+  #     - include: '#graph'
+
+  # graph:
+  #   patterns:
+  #     - match: ((this|subject|property)|\W[@$]\w+)
+  #       name: constant.language.volt
+  #     - begin: (\[)
+  #       end: (\])
+  #       patterns:
+  #       - include: '#graph'
+  #     - begin: (\{)
+  #       end: (\})
+  #       patterns:
+  #       - include: '#graph'
+  #     - include: '#variable'
+  #     - match: (a)
+  #       name: string.interpolated.volt
+  #     - match: (\w*:\w*)
+  #       name: string.interpolated.volt
+  #     - match: (filter|not|exists|graph|select|where|limit|sum|group|order|by|group_concat|offset|if|coalesce|in|is(iri|blank|literal|numeric)|str|lang|datatype|iri|uri|str|bnode|strdt|strlang|uuid|struuid|strlen|regex|replace|substr|ucase|lcase|strstarts|strends|contains|strbefore|strafter|encode_for_uri|concat|langmatches|abs|round|ceil|floor|rand|now|year|month|day|hours|minutes|seconds|timezone|tz|md5|sha1|sha256|sha384|sha512|values|distinct|reduced|having|count|avg|min|max|sample)
+  #       name: keyword.operator.volt
