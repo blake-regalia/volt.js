@@ -36,7 +36,8 @@
     "qs": "^6.2.0",
     "rapunzel": "^0.1.12",
     "spaz": "^0.2.1",
-    "turtle-validator": "^1.0.1"
+    "turtle-validator": "^1.0.1",
+    "uuid": "^3.0.0"
   },
   "devDependencies": {
     "amd-loader": "0.0.5",
